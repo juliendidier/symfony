@@ -90,6 +90,10 @@ class StreamOutput extends Output
         fflush($this->stream);
     }
 
+    public function renderException(\Exception $e)
+    {
+       $this->writeln($e->getMessage());
+    }
     /**
      * Returns true if the stream supports colorization.
      *
