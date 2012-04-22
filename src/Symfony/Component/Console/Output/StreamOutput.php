@@ -28,11 +28,15 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
  *
  * @api
  */
-class StreamOutput extends Output
+class StreamOutput extends Output implements ConsoleOutputInterface
 {
+    private $statusCode;
     private $stream;
+    private $stderr;
 
     /**
+     * @new
+     *
      * Constructor.
      *
      * @param mixed           $stream    A stream resource
@@ -52,6 +56,7 @@ class StreamOutput extends Output
         }
 
         $this->stream = $stream;
+        $this->stderr = new ErrorOutput($verbosity, $decorated, $formatter);
 
         if (null === $decorated) {
             $decorated = $this->hasColorSupport($decorated);
@@ -68,6 +73,37 @@ class StreamOutput extends Output
     public function getStream()
     {
         return $this->stream;
+    }
+
+    public function setDecorated($decorated)
+    {
+        parent::setDecorated($decorated);
+        $this->stderr->setDecorated($decorated);
+    }
+
+    public function setFormatter(OutputFormatterInterface $formatter)
+    {
+        parent::setFormatter($formatter);
+        $this->stderr->setFormatter($formatter);
+    }
+
+    public function setVerbosity($level)
+    {
+        parent::setVerbosity($level);
+        $this->stderr->setVerbosity($level);
+    }
+
+    /**
+     * @return OutputInterface
+     */
+    public function getErrorOutput()
+    {
+        return $this->stderr;
+    }
+
+    public function setErrorOutput(ErrorOutput $error)
+    {
+        $this->stderr = $error;
     }
 
     /**
@@ -90,10 +126,40 @@ class StreamOutput extends Output
         fflush($this->stream);
     }
 
-    public function renderException(\Exception $e)
+    /**
+     * @new
+     */
+    public function getDisplay()
     {
-       $this->writeln($e->getMessage());
+        rewind($this->getStream());
+
+        return stream_get_contents($this->getStream());
     }
+
+    /**
+     * @new
+     */
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * @new
+     */
+    public function SetStatusCode($statusCode)
+    {
+        $this->statusCode = $statusCode;
+    }
+
+    /**
+     * @new
+     */
+    public function isSuccessful()
+    {
+        return 0 == $this->statusCode;
+    }
+
     /**
      * Returns true if the stream supports colorization.
      *

@@ -14,6 +14,7 @@ namespace Symfony\Bundle\FrameworkBundle\Test;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 /**
  * WebTestCase is the base class for functional tests.
@@ -46,6 +47,17 @@ abstract class WebTestCase extends \PHPUnit_Framework_TestCase
         $client->setServerParameters($server);
 
         return $client;
+    }
+
+    /**
+     * @new
+     */
+    static protected function createApplication()
+    {
+        $application = new Application(static::$kernel);
+        $application->setAutoExit(false);
+
+        return $application;
     }
 
     /**

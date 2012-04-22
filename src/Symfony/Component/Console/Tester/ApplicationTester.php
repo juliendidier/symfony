@@ -75,9 +75,7 @@ class ApplicationTester
      */
     public function getDisplay()
     {
-        rewind($this->output->getStream());
-
-        return stream_get_contents($this->output->getStream());
+        return $this->output->getDisplay();
     }
 
     /**

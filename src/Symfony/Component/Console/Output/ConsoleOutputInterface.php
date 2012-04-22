@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\Console\Output;
 
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ErrorOutput;
 
 /**
  * ConsoleOutputInterface is the interface implemented by ConsoleOutput class.
@@ -26,5 +26,5 @@ interface ConsoleOutputInterface extends OutputInterface
      */
     public function getErrorOutput();
 
-    public function setErrorOutput(OutputInterface $error);
+    public function setErrorOutput(ErrorOutput $error);
 }
