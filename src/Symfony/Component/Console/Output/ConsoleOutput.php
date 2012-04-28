@@ -33,6 +33,7 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
 class ConsoleOutput extends StreamOutput
 {
     private $statusCode;
+    private $errorOutput;
 
     /**
      * Constructor.
@@ -47,16 +48,33 @@ class ConsoleOutput extends StreamOutput
     public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = null, OutputFormatterInterface $formatter = null)
     {
         parent::__construct(fopen('php://stdout', 'w'), $verbosity, $decorated, $formatter);
+        $this->errorOutput = new ErrorOutput($verbosity, $decorated, $formatter);
     }
 
     /**
-     * @new
+     * @return OutputInterface
      */
-    public function getDisplay()
+    public function getErrorOutput()
     {
-        rewind($this->getStream());
+        return $this->errorOutput;
+    }
 
-        return stream_get_contents($this->getStream());
+    public function setDecorated($decorated)
+    {
+        parent::setDecorated($decorated);
+        $this->errorOutput->setDecorated($decorated);
+    }
+
+    public function setFormatter(OutputFormatterInterface $formatter)
+    {
+        parent::setFormatter($formatter);
+        $this->errorOutput->setFormatter($formatter);
+    }
+
+    public function setVerbosity($level)
+    {
+        parent::setVerbosity($level);
+        $this->errorOutput->setVerbosity($level);
     }
 
     /**
@@ -81,5 +99,10 @@ class ConsoleOutput extends StreamOutput
     public function isSuccessful()
     {
         return 0 == $this->statusCode;
+    }
+
+    public function renderExepction($e)
+    {
+        $this->errorOutput->renderException($e);
     }
 }

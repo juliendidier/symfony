@@ -22,7 +22,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Console\Output\TestOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\HelpCommand;
 use Symfony\Component\Console\Command\ListCommand;
@@ -93,7 +93,7 @@ class Application
     public function execute($command)
     {
         $this->input = new StringInput($command);
-        $this->output = new StreamOutput(fopen('php://memory', 'w', false));
+        $this->output = new TestOutput();
 
         $this->run($this->input, $this->output);
 
@@ -129,7 +129,12 @@ class Application
                 throw $e;
             }
 
-            $this->renderException($e, $output);
+            if ($output instanceof ConsoleOutputInterface) {
+                $this->renderException($e, $output->getErrorOutput());
+            } else {
+                $this->renderException($e, $output);
+            }
+
             $statusCode = $e->getCode();
 
             $statusCode = is_numeric($statusCode) && $statusCode ? $statusCode : 1;
@@ -144,7 +149,7 @@ class Application
             // @codeCoverageIgnoreEnd
         }
 
-        $output->setStatusCode($statusCode);
+        // $output->setStatusCode($statusCode);
 
         return $statusCode;
     }

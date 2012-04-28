@@ -13,7 +13,7 @@ namespace Symfony\Component\Console\Tester;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Console\Output\TestOutput;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
@@ -55,7 +55,7 @@ class CommandTester
             $this->input->setInteractive($options['interactive']);
         }
 
-        $this->output = new StreamOutput(fopen('php://memory', 'w', false));
+        $this->output = new TestOutput();
         if (isset($options['decorated'])) {
             $this->output->setDecorated($options['decorated']);
         }
