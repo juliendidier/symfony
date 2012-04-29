@@ -129,14 +129,16 @@ class Application
                 throw $e;
             }
 
-            if ($output instanceof ConsoleOutputInterface) {
-                $this->renderException($e, $output->getErrorOutput());
-            } else {
-                $this->renderException($e, $output);
+            $output = $output->getErrorOutput();
+            $output->renderException($e);
+
+            if (null !== $this->runningCommand) {
+                $output->writeln(sprintf('<info>%s</info>', sprintf($this->runningCommand->getSynopsis(), $this->getName())));
+                $output->writeln("");
+                $output->writeln("");
             }
 
             $statusCode = $e->getCode();
-
             $statusCode = is_numeric($statusCode) && $statusCode ? $statusCode : 1;
         }
 
@@ -769,120 +771,6 @@ class Application
     }
 
     /**
-     * Renders a catched exception.
-     *
-     * @param Exception       $e      An exception instance
-     * @param OutputInterface $output An OutputInterface instance
-     */
-    public function renderException($e, $output)
-    {
-        $strlen = function ($string) {
-            if (!function_exists('mb_strlen')) {
-                return strlen($string);
-            }
-
-            if (false === $encoding = mb_detect_encoding($string)) {
-                return strlen($string);
-            }
-
-            return mb_strlen($string, $encoding);
-        };
-
-        do {
-            $title = sprintf('  [%s]  ', get_class($e));
-            $len = $strlen($title);
-            $width = $this->getTerminalWidth() ? $this->getTerminalWidth() - 1 : PHP_INT_MAX;
-            $lines = array();
-            foreach (preg_split("{\r?\n}", $e->getMessage()) as $line) {
-                foreach (str_split($line, $width - 4) as $line) {
-                    $lines[] = sprintf('  %s  ', $line);
-                    $len = max($strlen($line) + 4, $len);
-                }
-            }
-
-            $messages = array(str_repeat(' ', $len), $title.str_repeat(' ', max(0, $len - $strlen($title))));
-
-            foreach ($lines as $line) {
-                $messages[] = $line.str_repeat(' ', $len - $strlen($line));
-            }
-
-            $messages[] = str_repeat(' ', $len);
-
-            $output->writeln("");
-            $output->writeln("");
-            foreach ($messages as $message) {
-                $output->writeln('<error>'.$message.'</error>');
-            }
-            $output->writeln("");
-            $output->writeln("");
-
-            if (OutputInterface::VERBOSITY_VERBOSE === $output->getVerbosity()) {
-                $output->writeln('<comment>Exception trace:</comment>');
-
-                // exception related properties
-                $trace = $e->getTrace();
-                array_unshift($trace, array(
-                    'function' => '',
-                    'file'     => $e->getFile() != null ? $e->getFile() : 'n/a',
-                    'line'     => $e->getLine() != null ? $e->getLine() : 'n/a',
-                    'args'     => array(),
-                ));
-
-                for ($i = 0, $count = count($trace); $i < $count; $i++) {
-                    $class = isset($trace[$i]['class']) ? $trace[$i]['class'] : '';
-                    $type = isset($trace[$i]['type']) ? $trace[$i]['type'] : '';
-                    $function = $trace[$i]['function'];
-                    $file = isset($trace[$i]['file']) ? $trace[$i]['file'] : 'n/a';
-                    $line = isset($trace[$i]['line']) ? $trace[$i]['line'] : 'n/a';
-
-                    $output->writeln(sprintf(' %s%s%s() at <info>%s:%s</info>', $class, $type, $function, $file, $line));
-                }
-
-                $output->writeln("");
-                $output->writeln("");
-            }
-        } while ($e = $e->getPrevious());
-
-        if (null !== $this->runningCommand) {
-            $output->writeln(sprintf('<info>%s</info>', sprintf($this->runningCommand->getSynopsis(), $this->getName())));
-            $output->writeln("");
-            $output->writeln("");
-        }
-    }
-
-    /**
-     * Tries to figure out the terminal width in which this application runs
-     *
-     * @return int|null
-     */
-    protected function getTerminalWidth()
-    {
-        if (defined('PHP_WINDOWS_VERSION_BUILD') && $ansicon = getenv('ANSICON')) {
-            return preg_replace('{^(\d+)x.*$}', '$1', $ansicon);
-        }
-
-        if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
-            return $match[1];
-        }
-    }
-
-    /**
-     * Tries to figure out the terminal height in which this application runs
-     *
-     * @return int|null
-     */
-    protected function getTerminalHeight()
-    {
-        if (defined('PHP_WINDOWS_VERSION_BUILD') && $ansicon = getenv('ANSICON')) {
-            return preg_replace('{^\d+x\d+ \(\d+x(\d+)\)$}', '$1', trim($ansicon));
-        }
-
-        if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
-            return $match[2];
-        }
-    }
-
-    /**
      * Gets the name of the command based on input.
      *
      * @param InputInterface $input The input interface
@@ -935,25 +823,6 @@ class Application
             new FormatterHelper(),
             new DialogHelper(),
         ));
-    }
-
-    /**
-     * Runs and parses stty -a if it's available, suppressing any error output
-     *
-     * @return string
-     */
-    private function getSttyColumns()
-    {
-        $descriptorspec = array(1 => array('pipe', 'w'), 2 => array('pipe', 'w'));
-        $process = proc_open('stty -a | grep columns', $descriptorspec, $pipes, null, null, array('suppress_errors' => true));
-        if (is_resource($process)) {
-            $info = stream_get_contents($pipes[1]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
-
-            return $info;
-        }
     }
 
     /**

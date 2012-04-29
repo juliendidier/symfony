@@ -1,9 +1,10 @@
 
 
-                                      
-  [InvalidArgumentException]          
-  The "--foo" option does not exist.  
-                                      
+                                  
+  [InvalidArgumentException]      
+  The "--foo" option does not ex  
+  ist.                            
+                                  
 
 
 list [--xml] [--raw] [namespace]

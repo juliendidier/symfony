@@ -11,82 +11,132 @@
 
 namespace Symfony\Component\Console\Output;
 
-class ErrorOutput extends Output
+class ErrorOutput extends StreamOutput implements ErrorOutputInterface
 {
-    private $stream;
-
-    /**
-     * @new
+     /**
+     * Renders a catched exception.
+     *
+     * @param Exception       $e      An exception instance
      */
-    public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = null, OutputFormatterInterface $formatter = null)
+    public function renderException(\Exception $e)
     {
-        $this->stream = fopen('php://stderr', 'w');
+        $strlen = function ($string) {
+            if (!function_exists('mb_strlen')) {
+                return strlen($string);
+            }
 
-        if (null === $decorated) {
-            $decorated = $this->hasColorSupport($decorated);
+            if (false === $encoding = mb_detect_encoding($string)) {
+                return strlen($string);
+            }
+
+            return mb_strlen($string, $encoding);
+        };
+
+        do {
+            $title = sprintf('  [%s]  ', get_class($e));
+            $len = $strlen($title);
+            $width = $this->getTerminalWidth() ? $this->getTerminalWidth() - 1 : PHP_INT_MAX;
+
+            $lines = array();
+            foreach (preg_split("{\r?\n}", $e->getMessage()) as $line) {
+                foreach (str_split($line, $width - 4) as $line) {
+                     $lines[] = sprintf('  %s  ', $line);
+                     $len = max($strlen($line) + 4, $len);
+                 }
+             }
+
+             $messages = array(str_repeat(' ', $len), $title.str_repeat(' ', max(0, $len - $strlen($title))));
+
+             foreach ($lines as $line) {
+                 $messages[] = $line.str_repeat(' ', $len - $strlen($line));
+             }
+
+             $messages[] = str_repeat(' ', $len);
+
+             $this->writeln("");
+             $this->writeln("");
+             foreach ($messages as $message) {
+                 $this->writeln('<error>'.$message.'</error>');
+             }
+             $this->writeln("");
+             $this->writeln("");
+
+             if (OutputInterface::VERBOSITY_VERBOSE === $this->getVerbosity()) {
+                 $this->writeln('<comment>Exception trace:</comment>');
+
+                 // exception related properties
+                 $trace = $e->getTrace();
+                 array_unshift($trace, array(
+                     'function' => '',
+                     'file'     => $e->getFile() != null ? $e->getFile() : 'n/a',
+                     'line'     => $e->getLine() != null ? $e->getLine() : 'n/a',
+                     'args'     => array(),
+                 ));
+
+                 for ($i = 0, $count = count($trace); $i < $count; $i++) {
+                     $class = isset($trace[$i]['class']) ? $trace[$i]['class'] : '';
+                     $type = isset($trace[$i]['type']) ? $trace[$i]['type'] : '';
+                     $function = $trace[$i]['function'];
+                     $file = isset($trace[$i]['file']) ? $trace[$i]['file'] : 'n/a';
+                     $line = isset($trace[$i]['line']) ? $trace[$i]['line'] : 'n/a';
+
+                     $this->writeln(sprintf(' %s%s%s() at <info>%s:%s</info>', $class, $type, $function, $file, $line));
+                 }
+
+                 $this->writeln("");
+                 $this->writeln("");
+             }
+         } while ($e = $e->getPrevious());
+     }
+
+     /**
+      * Tries to figure out the terminal width in which this application runs
+      *
+      * @return int|null
+      */
+     protected function getTerminalWidth()
+     {
+        if (defined('PHP_WINDOWS_VERSION_BUILD') && $ansicon = getenv('ANSICON')) {
+            return preg_replace('{^(\d+)x.*$}', '$1', $ansicon);
         }
 
-        parent::__construct($verbosity, $decorated, $formatter);
+        if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
+           return $match[1];
+        }
     }
 
     /**
-     * Gets the stream attached to this StreamOutput instance.
+     * Tries to figure out the terminal height in which this application runs
      *
-     * @return resource A stream resource
+     * @return int|null
      */
-    public function getStream()
+    protected function getTerminalHeight()
     {
-        return $this->stream;
-    }
-
-    /**
-     * Writes a message to the output.
-     *
-     * @param string  $message A message to write to the output
-     * @param Boolean $newline Whether to add a newline or not
-     *
-     * @throws \RuntimeException When unable to write output (should never happen)
-     */
-    public function doWrite($message, $newline)
-    {
-        if (false === @fwrite($this->stream, $message.($newline ? PHP_EOL : ''))) {
-            // @codeCoverageIgnoreStart
-            // should never happen
-            throw new \RuntimeException('Unable to write output.');
-            // @codeCoverageIgnoreEnd
+        if (defined('PHP_WINDOWS_VERSION_BUILD') && $ansicon = getenv('ANSICON')) {
+            return preg_replace('{^\d+x\d+ \(\d+x(\d+)\)$}', '$1', trim($ansicon));
         }
 
-        fflush($this->stream);
-    }
-
-    /**
-     * @new
-     */
-    public function getDisplay()
-    {
-        rewind($this->getStream());
-
-        return stream_get_contents($this->getStream());
-    }
-
-    /**
-     * Returns true if the stream supports colorization.
-     *
-     * Colorization is disabled if not supported by the stream:
-     *
-     *  -  windows without ansicon
-     *  -  non tty consoles
-     *
-     * @return Boolean true if the stream supports colorization, false otherwise
-     */
-    protected function hasColorSupport()
-    {
-        // @codeCoverageIgnoreStart
-        if (DIRECTORY_SEPARATOR == '\\') {
-            return false !== getenv('ANSICON');
+        if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
+            return $match[2];
         }
+    }
 
-        return function_exists('posix_isatty') && @posix_isatty($this->stream);
-        // @codeCoverageIgnoreEnd
+    /**
+     * Runs and parses stty -a if it's available, suppressing any error output
+     *
+     * @return string
+     */
+    private function getSttyColumns()
+    {
+        $descriptorspec = array(1 => array('pipe', 'w'), 2 => array('pipe', 'w'));
+        $process = proc_open('stty -a | grep columns', $descriptorspec, $pipes, null, null, array('suppress_errors' => true));
+        if (is_resource($process)) {
+            $info = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
+
+            return $info;
+        }
     }
 }

@@ -28,9 +28,10 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
  *
  * @api
  */
-class StreamOutput extends Output
+abstract class StreamOutput extends Output
 {
-    private $stream;
+    protected $stream;
+    protected $statusCode;
 
     /**
      * @new
@@ -123,4 +124,19 @@ class StreamOutput extends Output
         // @codeCoverageIgnoreEnd
     }
 
+    /**
+     * @new
+     */
+    public function setStatusCode($statusCode)
+    {
+        $this->statusCode = $statusCode;
+    }
+
+    /**
+     * @new
+     */
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
 }

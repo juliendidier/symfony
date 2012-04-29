@@ -14,7 +14,7 @@ namespace Symfony\Component\Console\Tests\Helper;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\FormatterHelper;
-use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Console\Output\TestOutput;
 
 class DialogHelperTest extends \PHPUnit_Framework_TestCase
 {
@@ -88,6 +88,6 @@ class DialogHelperTest extends \PHPUnit_Framework_TestCase
 
     protected function getOutputStream()
     {
-        return new StreamOutput(fopen('php://memory', 'r+', false));
+        return new TestOutput();
     }
 }

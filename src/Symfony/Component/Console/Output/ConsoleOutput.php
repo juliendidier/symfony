@@ -30,9 +30,8 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
  *
  * @api
  */
-class ConsoleOutput extends StreamOutput
+class ConsoleOutput extends StreamOutput implements ConsoleOutputInterface
 {
-    private $statusCode;
     private $errorOutput;
 
     /**
@@ -48,7 +47,7 @@ class ConsoleOutput extends StreamOutput
     public function __construct($verbosity = self::VERBOSITY_NORMAL, $decorated = null, OutputFormatterInterface $formatter = null)
     {
         parent::__construct(fopen('php://stdout', 'w'), $verbosity, $decorated, $formatter);
-        $this->errorOutput = new ErrorOutput($verbosity, $decorated, $formatter);
+        $this->errorOutput = new ErrorOutput(fopen('php://stderr', 'w'), $verbosity, $decorated, $formatter);
     }
 
     /**
@@ -75,34 +74,5 @@ class ConsoleOutput extends StreamOutput
     {
         parent::setVerbosity($level);
         $this->errorOutput->setVerbosity($level);
-    }
-
-    /**
-     * @new
-     */
-    public function getStatusCode()
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * @new
-     */
-    public function SetStatusCode($statusCode)
-    {
-        $this->statusCode = $statusCode;
-    }
-
-    /**
-     * @new
-     */
-    public function isSuccessful()
-    {
-        return 0 == $this->statusCode;
-    }
-
-    public function renderExepction($e)
-    {
-        $this->errorOutput->renderException($e);
     }
 }

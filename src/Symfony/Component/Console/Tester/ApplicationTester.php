@@ -15,7 +15,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Console\Output\TestOutput;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
@@ -57,7 +57,7 @@ class ApplicationTester
             $this->input->setInteractive($options['interactive']);
         }
 
-        $this->output = new StreamOutput(fopen('php://memory', 'w', false));
+        $this->output = new TestOutput();
         if (isset($options['decorated'])) {
             $this->output->setDecorated($options['decorated']);
         }
