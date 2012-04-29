@@ -35,7 +35,7 @@ class ErrorOutput extends StreamOutput implements ErrorOutputInterface
         do {
             $title = sprintf('  [%s]  ', get_class($e));
             $len = $strlen($title);
-            $width = $this->getTerminalWidth() ? $this->getTerminalWidth() - 1 : PHP_INT_MAX;
+            $width = $this->getTerminalWidth() ? $this->getTerminalWidth() : PHP_INT_MAX;
 
             $lines = array();
             foreach (preg_split("{\r?\n}", $e->getMessage()) as $line) {
@@ -89,19 +89,19 @@ class ErrorOutput extends StreamOutput implements ErrorOutputInterface
          } while ($e = $e->getPrevious());
      }
 
-     /**
-      * Tries to figure out the terminal width in which this application runs
-      *
-      * @return int|null
-      */
-     protected function getTerminalWidth()
-     {
+    /**
+     * Tries to figure out the terminal width in which this application runs
+     *
+     * @return int|null
+     */
+    protected function getTerminalWidth()
+    {
         if (defined('PHP_WINDOWS_VERSION_BUILD') && $ansicon = getenv('ANSICON')) {
             return preg_replace('{^(\d+)x.*$}', '$1', $ansicon);
         }
 
         if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
-           return $match[1];
+            return $match[2];
         }
     }
 
@@ -117,7 +117,7 @@ class ErrorOutput extends StreamOutput implements ErrorOutputInterface
         }
 
         if (preg_match("{rows.(\d+);.columns.(\d+);}i", $this->getSttyColumns(), $match)) {
-            return $match[2];
+            return $match[1];
         }
     }
 
