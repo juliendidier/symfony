@@ -151,7 +151,7 @@ class Application
             // @codeCoverageIgnoreEnd
         }
 
-        // $output->setStatusCode($statusCode);
+        $output->setStatusCode($statusCode);
 
         return $statusCode;
     }

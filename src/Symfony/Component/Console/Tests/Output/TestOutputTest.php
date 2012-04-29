@@ -12,12 +12,11 @@
 namespace Symfony\Component\Console\Tests\Output;
 
 use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\TestOutput;
 
 class TestOutputTest extends \PHPUnit_Framework_TestCase
 {
-    protected $stream;
-
     public function testConstructor()
     {
         $output = new TestOutput(Output::VERBOSITY_QUIET, true);
@@ -31,5 +30,51 @@ class TestOutputTest extends \PHPUnit_Framework_TestCase
         $output->writeln('foo');
         rewind($output->getStream());
         $this->assertEquals('foo'.PHP_EOL, stream_get_contents($output->getStream()), '->doWrite() writes to the stream');
+    }
+
+    public function testGetErrorOutput()
+    {
+        $output = new TestOutput();
+        $this->assertEquals($output, $output->getErrorOutput(), '->getErrorOutput returns the same instance');
+    }
+
+    public function testIsSuccessful()
+    {
+        $output = new TestOutput();
+        $output->setStatusCode(0);
+        $this->assertTrue($output->isSuccessful(), '->isSuccessful() returns true');
+
+        $output->setStatusCode(1);
+        $this->assertFalse($output->isSuccessful(), '->isSuccessful() returns false');
+    }
+
+    public function testRenderException()
+    {
+        $e = new \InvalidArgumentException('foo');
+        $output = new TestOutput(fopen('php://memory', 'w'));
+        $output->renderException($e);
+
+        $this->assertEquals($this->getFooError(), $output->getDisplay());
+        $this->assertEquals($e->getMessage(), $output->getErrorMessage());
+
+        $output->setVerbosity(OutputInterface::VERBOSITY_VERBOSE);
+        $output->renderException(new \RuntimeException('foo'));
+        $this->assertContains('Exception trace:', $output->getDisplay(), '->testRenderException returns the Exception trace');
+
+    }
+
+    protected function getFooError()
+    {
+        return <<<CONSOLE
+
+
+                              
+  [InvalidArgumentException]  
+  foo                         
+                              
+
+
+
+CONSOLE;
     }
 }

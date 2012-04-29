@@ -12,6 +12,7 @@
 namespace Symfony\Component\Console\Tests\Output;
 
 use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 class OutputTest extends \PHPUnit_Framework_TestCase
@@ -28,6 +29,14 @@ class OutputTest extends \PHPUnit_Framework_TestCase
         $output = new MockOutput();
         $output->setDecorated(true);
         $this->assertTrue($output->isDecorated(), 'setDecorated() sets the decorated flag');
+    }
+
+    public function testSetFormater()
+    {
+        $fooStyle = new OutputFormatter();
+        $output = new MockOutput();
+        $output->setFormatter($fooStyle);
+        $this->assertEquals($fooStyle, $output->getFormatter(), 'setFormater() sets the formater');
     }
 
     public function testSetGetVerbosity()
