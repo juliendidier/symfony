@@ -22,7 +22,7 @@ use Symfony\Component\Console\Output\ErrorOutput;
 interface ConsoleOutputInterface extends OutputInterface
 {
     /**
-     * @new
+     * @return OutputInterface
      */
     function getErrorOutput();
 }

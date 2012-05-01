@@ -19,9 +19,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\TestOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\HelpCommand;
@@ -43,6 +41,10 @@ use Symfony\Component\Console\Helper\DialogHelper;
  *     $app->add(new SimpleCommand());
  *     $app->run();
  *
+ * or
+ *     $app = new Application('myapp', '1.0 (stable)');
+ *     $app->execute('simple:command [args]');
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  *
  * @api
@@ -58,11 +60,6 @@ class Application
     private $autoExit;
     private $definition;
     private $helperSet;
-
-    // @new
-    private $input;
-    private $output;
-    private $statusCode;
 
     /**
      * Constructor.
@@ -88,16 +85,19 @@ class Application
     }
 
     /**
-     * @new
+     * Executes a command
+     *
+     * @param string  $command  The command line
+     * @return OutputInterface  $output  An Output instance
      */
     public function execute($command)
     {
-        $this->input = new StringInput($command);
-        $this->output = new TestOutput();
+        $input = new StringInput($command);
+        $output = new TestOutput();
 
-        $this->run($this->input, $this->output);
+        $this->run($input, $output);
 
-        return $this->output;
+        return $output;
     }
 
     /**
@@ -123,7 +123,7 @@ class Application
         }
 
         try {
-            $statusCode = $this->doRun($input, $output);
+            $this->doRun($input, $output);
         } catch (\Exception $e) {
             if (!$this->catchExceptions) {
                 throw $e;
@@ -137,11 +137,9 @@ class Application
                 $output->writeln("");
                 $output->writeln("");
             }
-
-            $statusCode = $e->getCode();
-            $statusCode = is_numeric($statusCode) && $statusCode ? $statusCode : 1;
         }
 
+        $statusCode = $output->getStatusCode();
         if ($this->autoExit) {
             if ($statusCode > 255) {
                 $statusCode = 255;
@@ -150,8 +148,6 @@ class Application
             exit($statusCode);
             // @codeCoverageIgnoreEnd
         }
-
-        $output->setStatusCode($statusCode);
 
         return $statusCode;
     }
@@ -216,9 +212,10 @@ class Application
 
         $this->runningCommand = $command;
         $statusCode = $command->run($input, $output);
+        $output->setStatusCode($statusCode);
         $this->runningCommand = null;
 
-        return is_numeric($statusCode) ? $statusCode : 0;
+        return $output->getStatusCode();
     }
 
     /**

@@ -293,12 +293,12 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $tester = new ApplicationTester($application);
 
         $application->setCatchExceptions(true);
-        $tester->run(array('command' => 'foo'), array('decorated' => false));
-        $this->assertStringEqualsFile(self::$fixturesPath.'/application_renderexception1.txt', $this->normalizeLineBreaks($tester->getDisplay()), '->setCatchExceptions() sets the catch exception flag');
+        $output = $application->execute('foo');
+        $this->assertStringEqualsFile(self::$fixturesPath.'/application_renderexception1.txt', $this->normalizeLineBreaks($output->getDisplay()), '->setCatchExceptions() sets the catch exception flag');
 
         $application->setCatchExceptions(false);
         try {
-            $tester->run(array('command' => 'foo'), array('decorated' => false));
+            $output = $application->execute('foo');
             $this->fail('->setCatchExceptions() sets the catch exception flag');
         } catch (\Exception $e) {
             $this->assertInstanceOf('\Exception', $e, '->setCatchExceptions() sets the catch exception flag');

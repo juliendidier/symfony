@@ -34,8 +34,6 @@ abstract class StreamOutput extends Output
     protected $statusCode;
 
     /**
-     * @new
-     *
      * Constructor.
      *
      * @param mixed           $stream    A stream resource
@@ -94,7 +92,9 @@ abstract class StreamOutput extends Output
     }
 
     /**
-     * @new
+     * Returns the stream as string
+     *
+     * @return string Content of stream
      */
     public function getDisplay()
     {
@@ -124,13 +124,23 @@ abstract class StreamOutput extends Output
         // @codeCoverageIgnoreEnd
     }
 
+    /**
+     * Returns the status code
+     *
+     * @return integer Status code
+     */
     public function getStatusCode()
     {
         return $this->statusCode;
     }
 
+    /**
+     * Sets the status code
+     *
+     * @params integer $statusCode A status code
+     */
     public function setStatusCode($statusCode)
     {
-        $this->statusCode = $statusCode;
+        $this->statusCode = is_numeric($statusCode) ? $statusCode : 0;
     }
 }

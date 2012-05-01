@@ -50,7 +50,9 @@ abstract class WebTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @new
+     * Creates an Application.
+     *
+     * @return Application An Application instance
      */
     static protected function createApplication()
     {

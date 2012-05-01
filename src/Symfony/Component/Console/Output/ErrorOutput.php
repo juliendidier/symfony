@@ -11,6 +11,12 @@
 
 namespace Symfony\Component\Console\Output;
 
+/**
+ * Output used to render commands with style
+ *
+ * @author Fabien Potencier <fabien@symfony.com>
+ * @author Julien DIDIER <julien.didier@sensiolabs.com>
+ */
 class ErrorOutput extends StreamOutput implements ErrorOutputInterface
 {
      /**
@@ -20,6 +26,8 @@ class ErrorOutput extends StreamOutput implements ErrorOutputInterface
      */
     public function renderException(\Exception $e)
     {
+        $this->setStatusCode($e->getCode());
+
         $strlen = function ($string) {
             if (!function_exists('mb_strlen')) {
                 return strlen($string);

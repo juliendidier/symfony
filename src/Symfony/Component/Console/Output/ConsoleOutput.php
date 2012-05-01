@@ -50,9 +50,6 @@ class ConsoleOutput extends StreamOutput implements ConsoleOutputInterface
         $this->errorOutput = new ErrorOutput(fopen('php://stderr', 'w'), $verbosity, $decorated, $formatter);
     }
 
-    /**
-     * @return OutputInterface
-     */
     public function getErrorOutput()
     {
         return $this->errorOutput;
