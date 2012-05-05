@@ -12,7 +12,7 @@
 namespace Symfony\Component\Console\Output;
 
 /**
- * Output used to render commands with style
+ * Output used to render exceptions with style
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Julien DIDIER <julien.didier@sensiolabs.com>

@@ -18,7 +18,7 @@ namespace Symfony\Component\Console\Output;
  *
  * @see OutputInterface
  *
- * @author Fabien Potencier <fabien@symfony.com>
+ * @author Julien DIDIER <julien.didier@sensiolabs.com>
  */
 interface ErrorOutputInterface extends OutputInterface
 {

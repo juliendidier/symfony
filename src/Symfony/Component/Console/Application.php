@@ -42,6 +42,7 @@ use Symfony\Component\Console\Helper\DialogHelper;
  *     $app->run();
  *
  * or
+ *
  *     $app = new Application('myapp', '1.0 (stable)');
  *     $app->execute('simple:command [args]');
  *
@@ -139,17 +140,16 @@ class Application
             }
         }
 
-        $statusCode = $output->getStatusCode();
         if ($this->autoExit) {
-            if ($statusCode > 255) {
-                $statusCode = 255;
+            if ($output->getStatusCode() > 255) {
+                $output->setStatusCode(255);
             }
             // @codeCoverageIgnoreStart
-            exit($statusCode);
+            exit($output->getStatusCode());
             // @codeCoverageIgnoreEnd
         }
 
-        return $statusCode;
+        return $output->getStatusCode();
     }
 
     /**
