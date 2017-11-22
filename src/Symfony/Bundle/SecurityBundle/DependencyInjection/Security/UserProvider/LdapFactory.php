@@ -11,7 +11,7 @@
 
 namespace Symfony\Bundle\SecurityBundle\DependencyInjection\Security\UserProvider;
 
-use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -44,7 +44,7 @@ class LdapFactory implements UserProviderFactoryInterface
         return 'ldap';
     }
 
-    public function addConfiguration(NodeDefinition $node)
+    public function addConfiguration(ArrayNodeDefinition $node)
     {
         $node
             ->children()

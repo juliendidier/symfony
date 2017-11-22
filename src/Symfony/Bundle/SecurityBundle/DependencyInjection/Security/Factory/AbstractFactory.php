@@ -69,7 +69,7 @@ abstract class AbstractFactory implements SecurityFactoryInterface
         return array($authProviderId, $listenerId, $entryPointId);
     }
 
-    public function addConfiguration(NodeDefinition $node)
+    public function addConfiguration(ArrayNodeDefinition $node)
     {
         $builder = $node->children();
 
